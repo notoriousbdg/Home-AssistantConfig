@@ -1,0 +1,97 @@
+homeassistant:
+  # Name of the location where Home Assistant is running
+  name: Home
+  # Location required to calculate the time the sun rises and sets
+  latitude: !secret home_latitude
+  longitude: !secret home_longitude
+  # Impacts weather/sunrise data (altitude above sea level in meters)
+  elevation: !secret home_elevation
+  # metric for Metric, imperial for Imperial
+  unit_system: imperial
+  # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time_zone: !secret home_timezone
+  #customize: !include customize.yaml
+
+# Show links to resources in log and frontend
+#introduction:
+
+# Enables the frontend
+frontend:
+
+# Enables configuration UI
+config:
+
+http:
+  # Uncomment this to add a password (recommended!)
+  api_password: !secret http_api_password
+  #ssl_certificate: !secret ssl_certificate
+  #ssl_key: !secret ssl_key
+  #base_url: !secret base_url
+  #server_port: !secret server_port
+  trusted_networks:
+    - 127.0.0.1
+    - ::1
+    - !secret trusted_ip
+  ip_ban_enabled: True
+  login_attempts_threshold: 5
+
+# Checks for available updates
+# Note: This component will send some information about your system to
+# the developers to assist with development of Home Assistant.
+# For more information, please see:
+# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
+updater:
+  # Optional, allows Home Assistant developers to focus on popular components.
+  # include_used_components: true
+
+# Discover some devices automatically
+discovery:
+
+# Allows you to issue voice commands from the frontend in enabled browsers
+conversation:
+
+# Enables support for tracking state changes over time.
+history:
+
+# View all events in a logbook
+logbook:
+
+# Track the sun
+sun:
+
+# Weather Prediction
+sensor:
+  platform: yr
+
+# Text to speech
+tts:
+  platform: google
+
+group: !include groups.yaml
+automation: !include automations.yaml
+
+#zone: !include zones.yaml
+#sensor: !include sensors.yaml
+#switch: !include switches.yaml
+#device_tracker: !include device_tracker.yaml
+
+arlo:
+  username: !secret arlo_username
+  password: !secret arlo_password
+  
+ecobee:
+  api_key: !secret ecobee_api_key
+
+emulated_hue:
+  type: google_home
+  listen_port: 80
+  host_ip: !secret ha_ip
+  expose_by_default: true
+  exposed_domains:
+    - cover
+    - fan
+    - light
+    - switch
+
+ffmpeg:
+  ffmpeg_bin: /usr/bin/ffmpeg
