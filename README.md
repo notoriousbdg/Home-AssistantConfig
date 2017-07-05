@@ -1,1 +1,1 @@
-# Home-AssistantConfig
+# [![Build Status](https://travis-ci.org/notoriousbdg/Home-AssistantConfig.svg?branch=master)](https://travis-ci.org/notoriousbdg/Home-AssistantConfig) My [Home Assistant](https://home-assistant.io/) Config
