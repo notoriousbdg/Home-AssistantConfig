@@ -75,23 +75,5 @@ automation: !include automations.yaml
 #switch: !include switches.yaml
 #device_tracker: !include device_tracker.yaml
 
-arlo:
-  username: !secret arlo_username
-  password: !secret arlo_password
-  
-ecobee:
-  api_key: !secret ecobee_api_key
-
-emulated_hue:
-  type: google_home
-  listen_port: 80
-  host_ip: !secret ha_ip
-  expose_by_default: true
-  exposed_domains:
-    - cover
-    - fan
-    - light
-    - switch
-
 ffmpeg:
   ffmpeg_bin: /usr/bin/ffmpeg
