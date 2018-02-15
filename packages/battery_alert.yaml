@@ -3,13 +3,18 @@
 ################################################################
 
 ################################################################
-## Version 1.0.0
+## Version 1.0.1
 ################################################################
 ##
 ## Changelog
 ## 1.0.0 (2018-02-14)
 ##   Added
 ##   - Added version number to enable better tracking
+## 1.0.1 (2018-02-15)
+##   Added
+##   - Added battery_sensor_creation_disabled attibute to skip
+##     creating a battery sensor even when an battery attribute
+##     exists.
 ##
 ################################################################
 
