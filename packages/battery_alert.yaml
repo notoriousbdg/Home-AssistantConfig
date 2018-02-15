@@ -58,6 +58,7 @@
 ##        sensor.sensor_name_to_ignore_battery:
 ##          battery_alert_disabled: true
 ##
+## 9. To disable creating a sensor from battery attributes for a specific entity, use customize to
 ##    set `battery_sensor_creation_disabled` to `true`
 ##
 ##    homeassistant:
