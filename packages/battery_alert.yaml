@@ -3,7 +3,7 @@
 ################################################################
 
 ################################################################
-## Version 1.0.1
+## Version 1.0.2
 ################################################################
 ##
 ## Changelog
@@ -15,6 +15,9 @@
 ##   - Added battery_sensor_creation_disabled attibute to skip
 ##     creating a battery sensor even when an battery attribute
 ##     exists.
+## 1.0.2 (2018-04-06)
+##   Added
+##   - Added battery icon to sensors.
 ##
 ################################################################
 
@@ -384,6 +387,7 @@ automation:
             "device_class": "sensor",
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.new_state.object_id }}_battery/state",
+            "icon": "mdi:battery",
             "unit_of_measurement": "%"
           }
     - service: mqtt.publish
@@ -421,6 +425,7 @@ automation:
             "device_class": "sensor",
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.new_state.object_id }}_battery/state",
+            "icon": "mdi:battery",
             "unit_of_measurement": "%"
           }
     - service: mqtt.publish
@@ -458,6 +463,7 @@ automation:
             "device_class": "sensor",
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.new_state.object_id }}_battery/state",
+            "icon": "mdi:battery",
             "unit_of_measurement": "%"
           }
     - service: mqtt.publish
