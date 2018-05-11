@@ -18,6 +18,10 @@
 ## 1.0.2 (2018-04-06)
 ##   Added
 ##   - Added battery icon to sensors.
+## 1.0.3 (2018-05-10)
+##   Changed
+##   - Change device_class to battery and remove icon, which
+##     allows dynamic icons in 0.69.
 ##
 ################################################################
 
@@ -384,10 +388,9 @@ automation:
         retain: true
         payload: >-
           {
-            "device_class": "sensor",
+            "device_class": "battery",
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.new_state.object_id }}_battery/state",
-            "icon": "mdi:battery",
             "unit_of_measurement": "%"
           }
     - service: mqtt.publish
@@ -422,10 +425,9 @@ automation:
         retain: true
         payload: >-
           {
-            "device_class": "sensor",
+            "device_class": "battery",
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.new_state.object_id }}_battery/state",
-            "icon": "mdi:battery",
             "unit_of_measurement": "%"
           }
     - service: mqtt.publish
@@ -460,10 +462,9 @@ automation:
         retain: true
         payload: >-
           {
-            "device_class": "sensor",
+            "device_class": "battery",
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.new_state.object_id }}_battery/state",
-            "icon": "mdi:battery",
             "unit_of_measurement": "%"
           }
     - service: mqtt.publish
