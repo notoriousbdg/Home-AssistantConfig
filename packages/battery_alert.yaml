@@ -22,6 +22,12 @@
 ##   Changed
 ##   - Change device_class to battery and remove icon, which
 ##     allows dynamic icons in 0.69.
+## 1.0.4 (2018-05-11)
+##   Changed
+##   - Fixed condition battery_sensor_creation_disabled condition
+##   Added
+##   - Documented a jinja template that can be use to assist
+##     with creating a group containing all battery sensors.
 ##
 ################################################################
 
@@ -29,54 +35,73 @@
 ## Install Instructions
 ################################################################
 ##
-## 1. Enable MQTT using your preferred MQTT broker
-##    https://home-assistant.io/components/mqtt/
+##  1. Enable MQTT using your preferred MQTT broker
+##     https://home-assistant.io/components/mqtt/
 ##
-## 2. Enable MQTT Discovery by adding `discovery: true` and
-##    `discovery_prefix: homeassistant` under the `mqtt:` section
-##    of your configuration.yaml
+##  2. Enable MQTT Discovery by adding `discovery: true` and
+##     `discovery_prefix: homeassistant` under the `mqtt:` section
+##     of your configuration.yaml
 ##
-##    mqtt:
-##      discovery: true
-##      discovery_prefix: homeassistant
+##     mqtt:
+##       discovery: true
+##       discovery_prefix: homeassistant
 ##
-## 3. Save this file as CONFIGDIR/packages/battery_alert.yaml
+##  3. Save this file as CONFIGDIR/packages/battery_alert.yaml
 ##
-## 4. Add `packages: !include_dir_named packages` under the
-##    `homeassistant:` section of your configuration.yaml
+##  4. Add `packages: !include_dir_named packages` under the
+##     `homeassistant:` section of your configuration.yaml
 ##
-##    homeassistant:
-##      packages: !include_dir_named packages
+##     homeassistant:
+##       packages: !include_dir_named packages
 ##
-## 5. Restart Home Assistant
+##  5. Restart Home Assistant
 ##
-## 6. Adjust Min Alert Threshold slider to the minimum battery
-##    level to alert on.  Note: the input slider requires the
-##    recorder component to keep it's state through restarts.
-##    If recorder is not enabled, the threshold can be set by
-##    un-remarking `initial` and setting the preferred default.
+##  6. Adjust Min Alert Threshold slider to the minimum battery
+##     level to alert on.  Note: the input slider requires the
+##     recorder component to keep it's state through restarts.
+##     If recorder is not enabled, the threshold can be set by
+##     un-remarking `initial` and setting the preferred default.
 ##
-## 7. Adjust Max Alert Threshold slider to the maximum battery
-##    level to alert on.  Note: the input slider requires the
-##    recorder component to keep it's state through restarts.
-##    If recorder is not enabled, the threshold can be set by
-##    un-remarking `initial` and setting the preferred default.
+##  7. Adjust Max Alert Threshold slider to the maximum battery
+##     level to alert on.  Note: the input slider requires the
+##     recorder component to keep it's state through restarts.
+##     If recorder is not enabled, the threshold can be set by
+##     un-remarking `initial` and setting the preferred default.
 ##
-## 8. To disable alerts for a specific entity, use customize to
-##    set `battery_alert_disabled` to `true`
+##  8. To disable alerts for a specific entity, use customize to
+##     set `battery_alert_disabled` to `true`
 ##
-##    homeassistant:
-##      customize:
-##        sensor.sensor_name_to_ignore_battery:
-##          battery_alert_disabled: true
+##     homeassistant:
+##       customize:
+##         sensor.sensor_name_to_ignore_battery:
+##           battery_alert_disabled: true
 ##
-## 9. To disable creating a sensor from battery attributes for a specific entity, use customize to
-##    set `battery_sensor_creation_disabled` to `true`
+##  9. To disable creating a sensor from battery attributes for a specific entity, use customize to
+##     set `battery_sensor_creation_disabled` to `true`
 ##
-##    homeassistant:
-##      customize:
-##        sensor.sensor_with_battery_attibute:
-##          battery_sensor_creation_disabled: true
+##     homeassistant:
+##       customize:
+##         sensor.sensor_with_battery_attibute:
+##           battery_sensor_creation_disabled: true
+##
+## 10. The jinja template below can be used to simplify creation of a group containing battery sensors.
+##     Navigate to the /dev-template page then paste the template code below into the editor section.
+##     The right hand side will have the yaml needed to create a group that contains all of your
+##     battery sensors, which you can just copy/paste into your group config.
+##
+##     battery_status:
+##       name: Battery Status
+##       icon: mdi:battery-charging
+##       entities:
+##     {%- for item in states.sensor if (
+##       "battery" in item.name | lower
+##       and not "voltage" in item.name | lower
+##       and not "runtime" in item.name | lower
+##       and not "setpoint" in item.name | lower
+##       and not "charge" in item.name | lower
+##     ) %}
+##         - {{ item.entity_id }}
+##     {%- endfor -%}
 ##
 ################################################################
 
@@ -380,7 +405,7 @@ automation:
     - condition: template
       value_template: "{{ 'battery' not in trigger.event.data.new_state.name | lower }}"
     - condition: template
-      value_template: "{{ not is_state_attr(trigger.event.data.new_state.object_id, 'battery_sensor_creation_disabled', true) }}"
+      value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'battery_sensor_creation_disabled', true) }}"
   action:
     - service: mqtt.publish
       data_template:
@@ -417,7 +442,7 @@ automation:
     - condition: template
       value_template: "{{ 'battery' not in trigger.event.data.new_state.name | lower }}"
     - condition: template
-      value_template: "{{ not is_state_attr(trigger.event.data.new_state.object_id, 'battery_sensor_creation_disabled', true) }}"
+      value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'battery_sensor_creation_disabled', true) }}"
   action:
     - service: mqtt.publish
       data_template:
@@ -454,7 +479,7 @@ automation:
     - condition: template
       value_template: "{{ 'battery' not in trigger.event.data.new_state.name | lower }}"
     - condition: template
-      value_template: "{{ not is_state_attr(trigger.event.data.new_state.object_id, 'battery_sensor_creation_disabled', true) }}"
+      value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'battery_sensor_creation_disabled', true) }}"
   action:
     - service: mqtt.publish
       data_template:
