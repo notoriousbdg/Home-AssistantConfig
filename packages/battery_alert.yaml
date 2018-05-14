@@ -42,6 +42,12 @@
 ##   - Don't create a battery sensor from an entity if
 ##     device_class is battery
 ##
+## 1.0.6 (2018-05-14)
+##   Changed
+##   - Added object_id to notifications
+##   - Updated Battery Status group jinja code to check for
+##     battery device_class
+##
 ################################################################
 
 ################################################################
@@ -107,11 +113,15 @@
 ##       icon: mdi:battery-charging
 ##       entities:
 ##     {%- for item in states.sensor if (
-##       "battery" in item.name | lower
-##       and not "voltage" in item.name | lower
-##       and not "runtime" in item.name | lower
-##       and not "setpoint" in item.name | lower
-##       and not "charge" in item.name | lower
+##       (
+##         is_state_attr(item.entity_id, 'device_class', "battery")
+##       ) or (
+##         "battery" in item.name | lower
+##         and not "voltage" in item.name | lower
+##         and not "runtime" in item.name | lower
+##         and not "setpoint" in item.name | lower
+##         and not "charge" in item.name | lower
+##       )
 ##     ) %}
 ##         - {{ item.entity_id }}
 ##     {%- endfor -%}
@@ -261,7 +271,7 @@ automation:
             or item.state | lower == "low"
             or item.state | lower == "unknown"
           ) -%}
-          {{ item.name }} ({{ item.state }})
+          {{ item.name }} ({{ item.object_id }} = {{ item.state }})
         {% endfor -%}
         {% endmacro %}
         {{ battery_level() | trim != "" and not is_state_attr('persistent_notification.lowbatteryalert', 'message', battery_level()) }}
@@ -296,7 +306,7 @@ automation:
               or item.state | lower == "low"
               or item.state | lower == "unknown"
             ) -%}
-            {{ item.name }} ({{ item.state }})
+            {{ item.name }} ({{ item.object_id }} = {{ item.state }})
           {% endfor -%}
           {% endmacro %}
           {{ battery_level() }}
@@ -339,7 +349,7 @@ automation:
             or item.state | lower == "low"
             or item.state | lower == "unknown"
           ) -%}
-          {{ item.name }} ({{ item.state }})
+          {{ item.name }} ({{ item.object_id }} = {{ item.state }})
         {% endfor -%}
         {% endmacro %}
         {{ battery_level() | trim == "" }}
@@ -386,7 +396,7 @@ automation:
             or item.state | lower == "low"
             or item.state | lower == "unknown"
           ) -%}
-          {{ item.name }} ({{ item.state }})
+          {{ item.name }} ({{ item.object_id }} = {{ item.state }})
         {% endfor -%}
         {% endmacro %}
         {{ battery_level() | trim != "" }}
@@ -424,7 +434,7 @@ automation:
                   or item.state | lower == "low"
                   or item.state | lower == "unknown"
                 ) -%}
-                {{ item.name }} ({{ item.state }})
+                {{ item.name }} ({{ item.object_id }} = {{ item.state }})
               {% endfor -%}
               {% endmacro %}
               {{ battery_level() }}
