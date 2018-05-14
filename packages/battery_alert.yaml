@@ -28,6 +28,15 @@
 ##   Added
 ##   - Documented a jinja template that can be use to assist
 ##     with creating a group containing all battery sensors.
+## 1.0.5 (2018-05-14)
+##   Changed
+##   - Changed formatting of notifications to improve readability
+##   - Nofity via Slack immediately when thresholds are modified
+##   Added
+##   - Entities with device_class of battery no longer need
+##     battery in their friendly name to be monitored
+##   - Don't create a battery sensor from an entity if
+##     device_class is battery
 ##
 ################################################################
 
@@ -223,13 +232,18 @@ automation:
     - condition: template
       value_template: >
         {% macro battery_level() %}
-          {%- for item in states.sensor if (
-            "battery" in item.name | lower
-            and not "voltage" in item.name | lower
-            and not "runtime" in item.name | lower
-            and not "setpoint" in item.name | lower
-            and not "charge" in item.name | lower
-            and not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+        {%- for item in states.sensor if (
+          (
+            not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+          ) and (
+            is_state_attr(item.entity_id, 'device_class', "battery")
+            ) or (
+              "battery" in item.name | lower
+              and not "voltage" in item.name | lower
+              and not "runtime" in item.name | lower
+              and not "setpoint" in item.name | lower
+              and not "charge" in item.name | lower
+            )
           ) and (
             (
               (
@@ -243,8 +257,8 @@ automation:
             or item.state | lower == "low"
             or item.state | lower == "unknown"
           ) -%}
-          {{ item.name }} ({{ item.state }}){% if not loop.last %}, {% endif %}
-          {%- endfor -%}
+          {{ item.name }} ({{ item.state }})
+        {% endfor -%}
         {% endmacro %}
         {{ battery_level() | trim != "" and not is_state_attr('persistent_notification.lowbatteryalert', 'message', battery_level()) }}
     - service: persistent_notification.create
@@ -253,13 +267,18 @@ automation:
         notification_id: low-battery-alert
         message: >
           {% macro battery_level() %}
-            {%- for item in states.sensor if (
-              "battery" in item.name | lower
-              and not "voltage" in item.name | lower
-              and not "runtime" in item.name | lower
-              and not "setpoint" in item.name | lower
-              and not "charge" in item.name | lower
-              and not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+          {%- for item in states.sensor if (
+            (
+              not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+            ) and (
+              is_state_attr(item.entity_id, 'device_class', "battery")
+              ) or (
+                "battery" in item.name | lower
+                and not "voltage" in item.name | lower
+                and not "runtime" in item.name | lower
+                and not "setpoint" in item.name | lower
+                and not "charge" in item.name | lower
+              )
             ) and (
               (
                 (
@@ -273,8 +292,8 @@ automation:
               or item.state | lower == "low"
               or item.state | lower == "unknown"
             ) -%}
-            {{ item.name }} ({{ item.state }}){% if not loop.last %}, {% endif %}
-            {%- endfor -%}
+            {{ item.name }} ({{ item.state }})
+          {% endfor -%}
           {% endmacro %}
           {{ battery_level() }}
 
@@ -291,13 +310,18 @@ automation:
     - condition: template
       value_template: >
         {% macro battery_level() %}
-          {%- for item in states.sensor if (
-            "battery" in item.name | lower
-            and not "voltage" in item.name | lower
-            and not "runtime" in item.name | lower
-            and not "setpoint" in item.name | lower
-            and not "charge" in item.name | lower
-            and not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+        {%- for item in states.sensor if (
+          (
+            not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+          ) and (
+            is_state_attr(item.entity_id, 'device_class', "battery")
+            ) or (
+              "battery" in item.name | lower
+              and not "voltage" in item.name | lower
+              and not "runtime" in item.name | lower
+              and not "setpoint" in item.name | lower
+              and not "charge" in item.name | lower
+            )
           ) and (
             (
               (
@@ -311,8 +335,8 @@ automation:
             or item.state | lower == "low"
             or item.state | lower == "unknown"
           ) -%}
-          {{ item.name }} ({{ item.state }}){% if not loop.last %}, {% endif %}
-          {%- endfor -%}
+          {{ item.name }} ({{ item.state }})
+        {% endfor -%}
         {% endmacro %}
         {{ battery_level() | trim == "" }}
     - service: persistent_notification.dismiss
@@ -325,17 +349,26 @@ automation:
       at: '10:00:00'
     - platform: time
       at: '18:00:00'
+    - platform: state
+      entity_id:
+        - input_number.battery_alert_threshold_min
+        - input_number.battery_alert_threshold_max
   action:
     - condition: template
       value_template: >
         {% macro battery_level() %}
-          {%- for item in states.sensor if (
-            "battery" in item.name | lower
-            and not "voltage" in item.name | lower
-            and not "runtime" in item.name | lower
-            and not "setpoint" in item.name | lower
-            and not "charge" in item.name | lower
-            and not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+        {%- for item in states.sensor if (
+          (
+            not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+          ) and (
+            is_state_attr(item.entity_id, 'device_class', "battery")
+            ) or (
+              "battery" in item.name | lower
+              and not "voltage" in item.name | lower
+              and not "runtime" in item.name | lower
+              and not "setpoint" in item.name | lower
+              and not "charge" in item.name | lower
+            )
           ) and (
             (
               (
@@ -349,8 +382,8 @@ automation:
             or item.state | lower == "low"
             or item.state | lower == "unknown"
           ) -%}
-          {{ item.name }} ({{ item.state }}){% if not loop.last %}, {% endif %}
-          {%- endfor -%}
+          {{ item.name }} ({{ item.state }})
+        {% endfor -%}
         {% endmacro %}
         {{ battery_level() | trim != "" }}
     - service: notify.slack_notify
@@ -362,13 +395,18 @@ automation:
             title: "These devices have low battery levels"
             text: >
               {% macro battery_level() %}
-                {%- for item in states.sensor if (
-                  "battery" in item.name | lower
-                  and not "voltage" in item.name | lower
-                  and not "runtime" in item.name | lower
-                  and not "setpoint" in item.name | lower
-                  and not "charge" in item.name | lower
-                  and not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+              {%- for item in states.sensor if (
+                (
+                  not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+                ) and (
+                  is_state_attr(item.entity_id, 'device_class', "battery")
+                  ) or (
+                    "battery" in item.name | lower
+                    and not "voltage" in item.name | lower
+                    and not "runtime" in item.name | lower
+                    and not "setpoint" in item.name | lower
+                    and not "charge" in item.name | lower
+                  )
                 ) and (
                   (
                     (
@@ -382,8 +420,8 @@ automation:
                   or item.state | lower == "low"
                   or item.state | lower == "unknown"
                 ) -%}
-                {{ item.name }} ({{ item.state }}){% if not loop.last %}, {% endif %}
-                {%- endfor -%}
+                {{ item.name }} ({{ item.state }})
+              {% endfor -%}
               {% endmacro %}
               {{ battery_level() }}
 
@@ -404,6 +442,8 @@ automation:
       value_template: "{{ trigger.event.data.new_state.attributes.battery_level is defined }}"
     - condition: template
       value_template: "{{ 'battery' not in trigger.event.data.new_state.name | lower }}"
+    - condition: template
+      value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'device_class', 'battery') }}"
     - condition: template
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'battery_sensor_creation_disabled', true) }}"
   action:
@@ -442,6 +482,8 @@ automation:
     - condition: template
       value_template: "{{ 'battery' not in trigger.event.data.new_state.name | lower }}"
     - condition: template
+      value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'device_class', 'battery') }}"
+    - condition: template
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'battery_sensor_creation_disabled', true) }}"
   action:
     - service: mqtt.publish
@@ -478,6 +520,8 @@ automation:
       value_template: "{{ trigger.event.data.new_state.attributes['Battery numeric'] is defined }}"
     - condition: template
       value_template: "{{ 'battery' not in trigger.event.data.new_state.name | lower }}"
+    - condition: template
+      value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'device_class', 'battery') }}"
     - condition: template
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'battery_sensor_creation_disabled', true) }}"
   action:
