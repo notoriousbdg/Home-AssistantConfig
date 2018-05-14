@@ -3,31 +3,35 @@
 ################################################################
 
 ################################################################
-## Version 1.0.2
+## Changelog
 ################################################################
 ##
-## Changelog
 ## 1.0.0 (2018-02-14)
 ##   Added
 ##   - Added version number to enable better tracking
+##
 ## 1.0.1 (2018-02-15)
 ##   Added
 ##   - Added battery_sensor_creation_disabled attibute to skip
 ##     creating a battery sensor even when an battery attribute
 ##     exists.
+##
 ## 1.0.2 (2018-04-06)
 ##   Added
 ##   - Added battery icon to sensors.
+##
 ## 1.0.3 (2018-05-10)
 ##   Changed
 ##   - Change device_class to battery and remove icon, which
 ##     allows dynamic icons in 0.69.
+##
 ## 1.0.4 (2018-05-11)
 ##   Changed
 ##   - Fixed condition battery_sensor_creation_disabled condition
 ##   Added
 ##   - Documented a jinja template that can be use to assist
 ##     with creating a group containing all battery sensors.
+##
 ## 1.0.5 (2018-05-14)
 ##   Changed
 ##   - Changed formatting of notifications to improve readability
