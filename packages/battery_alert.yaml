@@ -65,6 +65,14 @@
 ##     battery in their name. Detection is now based on icon
 ##     rather than keywords.
 ##
+## 1.0.8 (2018-06-01)
+##   Added
+##   - Add support for defining battery_template attibute to
+##     allow manipulation of value of battery sensor
+##   - Support battery attributes that contain strings
+##   Removed
+##   - Cleaned up notifications by removing object id
+##
 ################################################################
 
 ################################################################
@@ -120,7 +128,32 @@
 ##         sensor.sensor_with_battery_attibute:
 ##           battery_sensor_creation_disabled: true
 ##
-## 10. The jinja template below can be used to simplify creation of a group containing battery sensors.
+## 10. If a battery attribute requires a template to convert it into a usable percent
+##     or string, use customize to add `battery_template` with the necessary template.
+##     The template should result in either a percentage or a string ("Low" will
+##     trigger low battery notification).
+##
+##     This example will create a battery sensor with the value of battery_level * 2
+##
+##     homeassistant:
+##       customize:
+##         sensor.sensor_with_battery_attibute_template:
+##           battery_template: "{{ value | int * 2 }}"
+##
+##     This example will create a battery sensor that contains "Low" if battery_level
+##     is less than 2
+##
+##     homeassistant:
+##       customize:
+##         sensor.sensor_with_battery_attibute_template:
+##           battery_template: >-
+##             {%- if value < 2 -%}
+##             "Low"
+##             {%- else -%}
+##             "Full"
+##             {%- endif -%}
+##
+## 11. The jinja template below can be used to simplify creation of a group containing battery sensors.
 ##     Navigate to the /dev-template page then paste the template code below into the editor section.
 ##     The right hand side will have the yaml needed to create a group that contains all of your
 ##     battery sensors, which you can just copy/paste into your group config.
@@ -312,7 +345,7 @@ automation:
             or item.state | lower == 'low'
             or item.state | lower == 'unknown'
           ) -%}
-          {{ item.name }} ({{ item.entity_id.split('.')[1] }} = {{ item.state }})
+          {{ item.name }} ({{ item.state }})
         {% endfor -%}
         {% endmacro %}
         {{ battery_level() | trim != "" }}
@@ -359,7 +392,7 @@ automation:
               or item.state | lower == 'low'
               or item.state | lower == 'unknown'
             ) -%}
-            {{ item.name }} ({{ item.entity_id.split('.')[1] }} = {{ item.state }})
+            {{ item.name }} ({{ item.state }})
           {% endfor -%}
           {% endmacro %}
           {{ battery_level() }}
@@ -414,7 +447,7 @@ automation:
             or item.state | lower == 'low'
             or item.state | lower == 'unknown'
           ) -%}
-          {{ item.name }} ({{ item.entity_id.split('.')[1] }} = {{ item.state }})
+          {{ item.name }} ({{ item.state }})
         {% endfor -%}
         {% endmacro %}
         {{ battery_level() | trim == "" }}
@@ -476,6 +509,9 @@ automation:
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state",
             "unit_of_measurement": "%",
+            {% if trigger.event.data.new_state.attributes.battery_template is defined -%}
+            "value_template": "{{ trigger.event.data.new_state.attributes.battery_template }}",
+            {%- endif %}
             "unique_id": "{{ trigger.event.data.entity_id.split('.')[1] }}_battery",
             "source_entity_id": "{{ trigger.event.data.entity_id }}",
             {% if trigger.event.data.new_state.attributes.battery_level is defined -%}
@@ -492,7 +528,16 @@ automation:
       data_template:
         topic: "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state"
         retain: true
-        payload: "{{ trigger.event.data.new_state.attributes.battery_level | int }}"
+        payload: >-
+          {%- set attrib = trigger.event.data.new_state.attributes.battery_level -%}
+          {%- if attrib is number
+              or attrib | length == attrib | int | string | length
+              or attrib | length == attrib | float | string | length
+          -%}
+            {{ attrib | int }}
+          {%- else -%}
+            {{ attrib }}
+          {%- endif -%}
 
 - alias: battery_sensor_from_battery_attribute
   trigger:
@@ -525,7 +570,16 @@ automation:
       data_template:
         topic: "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state"
         retain: true
-        payload: "{{ trigger.event.data.new_state.attributes.battery | int }}"
+        payload: >-
+          {%- set attrib = trigger.event.data.new_state.attributes.battery -%}
+          {%- if attrib is number
+              or attrib | length == attrib | int | string | length
+              or attrib | length == attrib | float | string | length
+          -%}
+            {{ attrib | int }}
+          {%- else -%}
+            {{ attrib }}
+          {%- endif -%}
 
 - alias: battery_sensor_from_battery_numeric_attribute
   trigger:
