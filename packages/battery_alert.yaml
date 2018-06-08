@@ -80,6 +80,11 @@
 ##   Removed
 ##   - Removed sample jinja to create battery status group yaml
 ##
+## 1.0.10 (2018-06-08)
+##   Added
+##   - Moved group.update_battery_status_group_members to Battery
+##     Alert group
+##
 ################################################################
 
 ################################################################
@@ -219,6 +224,11 @@ homeassistant:
       friendly_name: "Battery Sensor from battery numeric Attribute"
       icon: mdi:battery-charging-wireless-outline
 
+    automation.update_battery_status_group_members:
+      <<: *customize
+      friendly_name: "Update Battery Status Group Members"
+      icon: mdi:group
+
 ################################################
 ## Group
 ################################################
@@ -235,6 +245,7 @@ group:
       - automation.battery_sensor_from_battery_level_attribute
       - automation.battery_sensor_from_battery_attribute
       - automation.battery_sensor_from_battery_numeric_attribute
+      - automation.update_battery_status_group_members
 
 ################################################
 ## Input Number
