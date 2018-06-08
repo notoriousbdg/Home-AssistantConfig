@@ -73,6 +73,13 @@
 ##   Removed
 ##   - Cleaned up notifications by removing object id
 ##
+## 1.0.9 (2018-06-08)
+##   Added
+##   - Automatically create Battery Status group containing all
+##     discovered batteries
+##   Removed
+##   - Removed sample jinja to create battery status group yaml
+##
 ################################################################
 
 ################################################################
@@ -152,43 +159,6 @@
 ##             {%- else -%}
 ##             "Full"
 ##             {%- endif -%}
-##
-## 11. The jinja template below can be used to simplify creation of a group containing battery sensors.
-##     Navigate to the /dev-template page then paste the template code below into the editor section.
-##     The right hand side will have the yaml needed to create a group that contains all of your
-##     battery sensors, which you can just copy/paste into your group config.
-##
-##     battery_status:
-##       name: Battery Status
-##       icon: mdi:battery-charging
-##       entities:
-##     {%- for item in states.sensor if (
-##       (
-##         not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
-##       ) and (
-##         is_state_attr(item.entity_id, 'device_class', 'battery')
-##         ) or (
-##           is_state_attr(item.entity_id, 'icon', 'mdi:battery')
-##         ) or (
-##           is_state_attr(item.entity_id, 'icon', 'mdi:battery-alert')
-##         ) or (
-##           is_state_attr(item.entity_id, 'icon', 'mdi:battery-unknown')
-##         ) or (
-##           'battery' in item.entity_id | lower
-##           and item.attributes.icon is defined
-##           and 'battery' in item.attributes.icon | lower
-##         ) or (
-##           'battery' in item.name | lower
-##           and item.attributes.icon is defined
-##           and 'battery' in item.attributes.icon | lower
-##         ) or (
-##           (item.entity_id | lower).endswith('_bat')
-##         ) or (
-##           (item.name | lower).endswith('_bat')
-##         )
-##       ) %}
-##         - {{ item.entity_id }}
-##     {%- endfor -%}
 ##
 ################################################################
 
@@ -613,3 +583,76 @@ automation:
         topic: "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state"
         retain: true
         payload: "{{ (trigger.event.data.new_state.attributes['Battery numeric'] | int + 1) * 10 }}"
+- alias: update_battery_status_group_members
+  trigger:
+    - platform: event
+      event_type: state_changed
+  condition:
+    - condition: template
+      value_template: "{{ trigger.event.data is not none }}"
+    - condition: template
+      value_template: "{{ trigger.event.data.new_state is not none }}"
+    - condition: template
+      value_template: "{{ trigger.event.data.new_state.attributes is not none }}"
+    - condition: template
+      value_template: "{{ trigger.event.data.old_state is not none }}"
+    - condition: or
+      conditions:
+        - condition: template
+          value_template: "{{ is_state_attr(trigger.event.data.entity_id, 'device_class', 'battery') }}"
+        - condition: template
+          value_template: "{{ is_state_attr(trigger.event.data.entity_id, 'icon', 'mdi:battery') }}"
+        - condition: template
+          value_template: "{{ is_state_attr(trigger.event.data.entity_id, 'icon', 'mdi:battery-alert') }}"
+        - condition: template
+          value_template: "{{ is_state_attr(trigger.event.data.entity_id, 'icon', 'mdi:battery-unknown') }}"
+        - condition: and
+          conditions:
+          - condition: template
+            value_template: "{{ trigger.event.data.new_state.attributes.icon is defined }}"
+          - condition: template
+            value_template: "{{ 'battery' in trigger.event.data.new_state.attributes.icon | lower }}"
+          - condition: or
+            conditions:
+            - condition: template
+              value_template: "{{ 'battery' in trigger.event.data.entity_id | lower }}"
+            - condition: template
+              value_template: "{{ 'battery' in trigger.event.data.new_state.name | lower }}"
+        - condition: template
+          value_template: "{{ (trigger.event.data.entity_id | lower).endswith('_bat') }}"
+        - condition: template
+          value_template: "{{ (trigger.event.data.new_state.name | lower).endswith('_bat') }}"
+  action:
+    - service: group.set
+      data_template:
+        object_id: "battery_status"
+        name: "Battery Status"
+        view: false
+        icon: "mdi:battery-charging"
+        control: "hidden"
+        visible: true
+        entities: >-
+          {%- for item in states.sensor if (
+            is_state_attr(item.entity_id, 'device_class', 'battery')
+            ) or (
+              is_state_attr(item.entity_id, 'icon', 'mdi:battery')
+            ) or (
+              is_state_attr(item.entity_id, 'icon', 'mdi:battery-alert')
+            ) or (
+              is_state_attr(item.entity_id, 'icon', 'mdi:battery-unknown')
+            ) or (
+              'battery' in item.entity_id | lower
+              and item.attributes.icon is defined
+              and 'battery' in item.attributes.icon | lower
+            ) or (
+              'battery' in item.name | lower
+              and item.attributes.icon is defined
+              and 'battery' in item.attributes.icon | lower
+            ) or (
+              (item.entity_id | lower).endswith('_bat')
+            ) or (
+              (item.name | lower).endswith('_bat')
+            )
+          -%}
+            {{ item.entity_id }}{% if not loop.last %}, {% endif %}
+          {%- endfor -%}
