@@ -113,6 +113,11 @@
 ##   - Consolidated the battery_sensor_from_* automations into a single
 ##     automation
 ##
+## 1.1.2 (2018-08-23)
+##   Fixed
+##   - Fixed issue where non-battery sensors with Battery in their name are
+##     added to group.battery_status
+##
 ################################################################
 
 ################################################################
@@ -601,6 +606,8 @@ automation:
                 or 'battery' in item.name | lower
               ) and (
                 item.attributes.icon is not defined
+              ) and (
+                not is_state_attr(entity_id, 'battery_alert_disabled', true)
               )
             )
           -%}
