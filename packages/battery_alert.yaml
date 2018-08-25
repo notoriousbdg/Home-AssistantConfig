@@ -607,7 +607,7 @@ automation:
               ) and (
                 item.attributes.icon is not defined
               ) and (
-                not is_state_attr(entity_id, 'battery_alert_disabled', true)
+                not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
               )
             )
           -%}
