@@ -122,6 +122,11 @@
 ##   Fixed
 ##   - Filter out trigger=none from automation.battery_sensor_from_attributes
 ##   - Don't convert float to int in mqtt payload
+##
+## 1.1.4 (2018-11-17)
+##   Fixed
+##   - Ignore entities with null states
+##   - Fix issue causing TypeError: object of type 'NoneType' has no len()
 ################################################################
 
 ################################################################
@@ -353,6 +358,7 @@ automation:
         {% macro battery_level() %}
         {% for entity_id in states.group.battery_status.attributes.entity_id if (
           not is_state_attr(entity_id, 'battery_alert_disabled', true)
+          and states(entity_id) is not none
           and (
             (
               (
@@ -379,6 +385,7 @@ automation:
           {% macro battery_level() %}
           {% for entity_id in states.group.battery_status.attributes.entity_id if (
             not is_state_attr(entity_id, 'battery_alert_disabled', true)
+            and states(entity_id) is not none
             and (
               (
                 (
@@ -414,6 +421,7 @@ automation:
         {% macro battery_level() %}
         {% for entity_id in states.group.battery_status.attributes.entity_id if (
           not is_state_attr(entity_id, 'battery_alert_disabled', true)
+          and states(entity_id) is not none
           and (
             (
               (
@@ -566,9 +574,13 @@ automation:
             {%- else -%}
               {%- set attrib = "unknown" -%}
             {%- endif -%}
-            "value": {%- if attrib | length == attrib | float | string | length -%}
+            "value": {%- if attrib | int == attrib -%}
+              {{ attrib }}
+            {%- elif attrib | float == attrib -%}
+              {{ attrib }}
+            {%- elif attrib | length == attrib | float | string | length -%}
               {{ attrib | float }}
-            {%- elif attrib is number or attrib | length == attrib | int | string | length -%}
+            {%- elif attrib | length == attrib | int | string | length -%}
               {{ attrib | int }}
             {%- else -%}
               "{{ attrib }}"
