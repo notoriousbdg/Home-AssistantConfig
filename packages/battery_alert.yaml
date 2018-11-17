@@ -118,6 +118,10 @@
 ##   - Fixed issue where non-battery sensors with Battery in their name are
 ##     added to group.battery_status
 ##
+## 1.1.3 (2018-11-17)
+##   Fixed
+##   - Filter out trigger=none from automation.battery_sensor_from_attributes
+##   - Don't convert float to int in mqtt payload
 ################################################################
 
 ################################################################
@@ -500,6 +504,8 @@ automation:
       event_type: state_changed
   condition:
     - condition: template
+      value_template: "{{ trigger is not none }}"
+    - condition: template
       value_template: "{{ trigger.event.data is not none }}"
     - condition: template
       value_template: "{{ trigger.event.data.old_state is not none }}"
@@ -560,10 +566,9 @@ automation:
             {%- else -%}
               {%- set attrib = "unknown" -%}
             {%- endif -%}
-            "value": {%- if attrib is number
-                or attrib | length == attrib | int | string | length
-                or attrib | length == attrib | float | string | length
-            -%}
+            "value": {%- if attrib | length == attrib | float | string | length -%}
+              {{ attrib | float }}
+            {%- elif attrib is number or attrib | length == attrib | int | string | length -%}
               {{ attrib | int }}
             {%- else -%}
               "{{ attrib }}"
