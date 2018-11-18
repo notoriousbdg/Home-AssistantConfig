@@ -127,6 +127,12 @@
 ##   Fixed
 ##   - Ignore entities with null states
 ##   - Fix issue causing TypeError: object of type 'NoneType' has no len()
+##
+## 1.1.5 (2018-11-18)
+##   Added
+##   - Add support for defining battery_template_string attibute to
+##     support templates that return strings
+
 ################################################################
 
 ################################################################
@@ -182,10 +188,9 @@
 ##         sensor.sensor_with_battery_attibute:
 ##           battery_sensor_creation_disabled: true
 ##
-## 10. If a battery attribute requires a template to convert it into a usable percent
-##     or string, use customize to add `battery_template` with the necessary template.
-##     The template should result in either a percentage or a string ("Low" will
-##     trigger low battery notification).
+## 10. If a battery attribute requires a template to convert it into a usable percent, use customize
+##     to add `battery_template` with the necessary template. The template result must be a number
+##     that represents a percentage.
 ##
 ##     This example will create a battery sensor with the value of battery_level * 2
 ##
@@ -194,13 +199,17 @@
 ##         sensor.sensor_with_battery_attibute_template:
 ##           battery_template: "{{ value_json.value | int * 2 }}"
 ##
+## 11. If a battery attribute requires a template to convert it into a string, use customize to add
+##     `battery_template_string` with the necessary template. The template result must be a string.
+##     For example, "Low" will trigger low battery notification).
+##
 ##     This example will create a battery sensor that contains "Low" if battery_level
 ##     is less than 2
 ##
 ##     homeassistant:
 ##       customize:
 ##         sensor.sensor_with_battery_attibute_template:
-##           battery_template: >-
+##           battery_template_string: >-
 ##             {%- if value < 2 -%}
 ##             "Low"
 ##             {%- else -%}
@@ -542,14 +551,19 @@ automation:
         retain: true
         payload: &config_payload >-
           {
-            "device_class": "battery",
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state",
-            "unit_of_measurement": "%",
             {% if trigger.event.data.new_state.attributes.battery_template is defined -%}
             "value_template": "{{ trigger.event.data.new_state.attributes.battery_template }}",
+            "unit_of_measurement": "%",
+            "device_class": "battery",
+            {% elif trigger.event.data.new_state.attributes.battery_template_string is defined -%}
+            "value_template": "{{ trigger.event.data.new_state.attributes.battery_template_string }}",
+            "icon": "mdi:battery",
             {% else -%}
             "value_template": "{{ "{{" }} value_json.value | int {{ "}}" }}",
+            "unit_of_measurement": "%",
+            "device_class": "battery",
             {% endif -%}
             "unique_id": "{{ trigger.event.data.entity_id.split('.')[1] }}_battery",
             "json_attributes": [
