@@ -132,7 +132,14 @@
 ##   Added
 ##   - Add support for defining battery_template_string attibute to
 ##     support templates that return strings
-
+##
+## 1.1.6 (2018-11-21)
+##   Removed
+##   - Removed attribute named attribute on the sensors
+##   Added
+##   - Added attribute to the MQTT sensors with the same name and value as the
+##     original entity
+##
 ################################################################
 
 ################################################################
@@ -551,6 +558,13 @@ automation:
         retain: true
         payload: &config_payload >-
           {
+            {% if trigger.event.data.new_state.attributes.battery_level is defined -%}
+              {%- set attribname = 'battery_level' -%}
+            {%- elif trigger.event.data.new_state.attributes.battery is defined -%}
+              {%- set attribname = 'battery' -%}
+            {%- elif trigger.event.data.new_state.attributes['Battery numeric'] is defined -%}
+              {%- set attribname = 'Battery numeric' -%}
+            {%- endif -%}
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state",
             {% if trigger.event.data.new_state.attributes.battery_template is defined -%}
@@ -568,7 +582,7 @@ automation:
             "unique_id": "{{ trigger.event.data.entity_id.split('.')[1] }}_battery",
             "json_attributes": [
               "entity_id",
-              "attribute",
+              "{{ attribname }}",
               "mqtt_config_topic",
               "mqtt_state_topic"
             ]
@@ -580,34 +594,29 @@ automation:
         payload: >-
           {
             {% if trigger.event.data.new_state.attributes.battery_level is defined -%}
-              {%- set attrib = trigger.event.data.new_state.attributes.battery_level -%}
+              {%- set attribval = trigger.event.data.new_state.attributes.battery_level -%}
+              {%- set attribname = 'battery_level' -%}
             {%- elif trigger.event.data.new_state.attributes.battery is defined -%}
-              {%- set attrib = trigger.event.data.new_state.attributes.battery -%}
+              {%- set attribval = trigger.event.data.new_state.attributes.battery -%}
+              {%- set attribname = 'battery' -%}
             {%- elif trigger.event.data.new_state.attributes['Battery numeric'] is defined -%}
-              {%- set attrib = (trigger.event.data.new_state.attributes['Battery numeric'] | int + 1) * 10 -%}
-            {%- else -%}
-              {%- set attrib = "unknown" -%}
+              {%- set attribval = (trigger.event.data.new_state.attributes['Battery numeric'] | int + 1) * 10 -%}
+              {%- set attribname = 'Battery numeric' -%}
             {%- endif -%}
-            "value": {%- if attrib | int == attrib -%}
-              {{ attrib }}
-            {%- elif attrib | float == attrib -%}
-              {{ attrib }}
-            {%- elif attrib | length == attrib | float | string | length -%}
-              {{ attrib | float }}
-            {%- elif attrib | length == attrib | int | string | length -%}
-              {{ attrib | int }}
+            "value": {%- if attribval | int == attribval -%}
+              {{ attribval }}
+            {%- elif attribval | float == attribval -%}
+              {{ attribval }}
+            {%- elif attribval | length == attribval | float | string | length -%}
+              {{ attribval | float }}
+            {%- elif attribval | length == attribval | int | string | length -%}
+              {{ attribval | int }}
             {%- else -%}
-              "{{ attrib }}"
+              "{{ attribval }}"
             {%- endif %},
             "entity_id": "{{ trigger.event.data.entity_id }}",
-            {% if trigger.event.data.new_state.attributes.battery_level is defined -%}
-            "attribute": "battery_level",
-            {%- elif trigger.event.data.new_state.attributes.battery is defined -%}
-            "attribute": "battery",
-            {%- elif trigger.event.data.new_state.attributes['Battery numeric'] is defined -%}
-            "attribute": "Battery numeric",
-            {%- else -%}
-            "attribute": "unknown",
+            {% if attribname is defined -%}
+            "{{ attribname }}": "{{ attribval }}",
             {%- endif %}
             "mqtt_config_topic": "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/config",
             "mqtt_state_topic": "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state"
