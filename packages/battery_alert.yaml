@@ -217,10 +217,10 @@
 ##       customize:
 ##         sensor.sensor_with_battery_attibute_template:
 ##           battery_template_string: >-
-##             {%- if value < 2 -%}
-##             "Low"
+##             {%- if value_json.value < 2 -%}
+##             Low
 ##             {%- else -%}
-##             "Full"
+##             Full
 ##             {%- endif -%}
 ##
 ################################################################
