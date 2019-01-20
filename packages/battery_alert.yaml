@@ -140,7 +140,7 @@
 ##   - Added attribute to the MQTT sensors with the same name and value as the
 ##     original entity
 ##
-## 1.1.6 (2018-11-21)
+## 1.2.0 (2019-01-20)
 ##   Breaking Changes
 ##   - Setting up notifications have changed.  Enter the name of the notifier in the `Notifier Name` input text box
 ##     and select the notifier format using the `Notifier Format` input select.
@@ -155,7 +155,6 @@
 ##   - Added Notifier Name input text box to store name of the notifier to use for notifications (defaults to notify.notify)
 ##   - Added Notifier Format input select to allow selection of notification format.  Options are Default and Slack.
 ##   - Added input_boolean.low_batteries to help with automations.  True means there are low batteries.
-################################################################
 ################################################################
 
 ################################################################
