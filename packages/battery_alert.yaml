@@ -157,6 +157,10 @@
 ##   - Added Notifier Name input text box to store name of the notifier to use for notifications (defaults to notify.notify)
 ##   - Added Notifier Format input select to allow selection of notification format.  Options are Default and Slack.
 ##   - Added input_boolean.low_batteries to help with automations.  True means there are low batteries.
+##
+## 1.2.1 (2019-01-23)
+##   Changed
+##   - Fixed Time platform to time_pattern platform
 ################################################################
 
 ################################################################
