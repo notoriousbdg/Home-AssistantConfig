@@ -161,6 +161,15 @@
 ## 1.2.1 (2019-01-23)
 ##   Changed
 ##   - Fixed Time platform to time_pattern platform
+##
+## 1.2.2 (2019-01-23)
+##   Added
+##   - Alert if battery state is unavailable
+##   Removed
+##   - Removed startup trigger from automation.update_battery_status_group_members
+##   Changed
+##   - Default to notify.notify if input_text.notifier_name doesn't contain "notify."
+################################################################
 ################################################################
 
 ################################################################
@@ -433,6 +442,7 @@ automation:
             )
             or states(entity_id) | lower == 'low'
             or states(entity_id) | lower == 'unknown'
+            or states(entity_id) | lower == 'unavailable'
           )
         ) -%}
           {{ state_attr(entity_id, "friendly_name") }} ({{ states(entity_id) }})
@@ -463,6 +473,7 @@ automation:
               )
               or states(entity_id) | lower == 'low'
               or states(entity_id) | lower == 'unknown'
+              or states(entity_id) | lower == 'unavailable'
             )
           ) -%}
             {{ state_attr(entity_id, "friendly_name") }} ({{ states(entity_id) }})
@@ -499,6 +510,7 @@ automation:
             )
             or states(entity_id) | lower == 'low'
             or states(entity_id) | lower == 'unknown'
+            or states(entity_id) | lower == 'unavailable'
           )
         ) -%}
           {{ state_attr(entity_id, "friendly_name") }} ({{ states(entity_id) }})
@@ -529,7 +541,7 @@ automation:
     - condition: template
       value_template: "{{ states.input_select.notifier_format.state == 'Default' }}"
     - service_template: >
-        {% if states.input_text.notifier_name.state != "" %}
+        {% if "notify." in states.input_text.notifier_name.state %}
           {{ states.input_text.notifier_name.state }}
         {% else %}
           notify.notify
@@ -693,10 +705,8 @@ automation:
 - alias: update_battery_status_group_members
   initial_state: 'on'
   trigger:
-    - platform: homeassistant
-      event: start
     - platform: time_pattern
-      minutes: '/5'
+      minutes: '/1'
       seconds: 00
   action:
     - service: group.set
