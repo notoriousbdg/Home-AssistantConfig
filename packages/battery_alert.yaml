@@ -169,7 +169,10 @@
 ##   - Removed startup trigger from automation.update_battery_status_group_members
 ##   Changed
 ##   - Default to notify.notify if input_text.notifier_name doesn't contain "notify."
-################################################################
+##
+## 1.2.3 (2019-03-02)
+##   Changed
+##   - Handle null attributes gracefully
 ################################################################
 
 ################################################################
@@ -595,8 +598,6 @@ automation:
     - condition: template
       value_template: "{{ trigger.event.data.new_state is not none }}"
     - condition: template
-      value_template: "{{ trigger.event.data.new_state.attributes is not none }}"
-    - condition: template
       value_template: "{{ 'battery' not in trigger.event.data.new_state.name | lower }}"
     - condition: template
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'device_class', 'battery') }}"
@@ -604,12 +605,24 @@ automation:
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'battery_sensor_creation_disabled', true) }}"
     - condition: or
       conditions:
-        - condition: template
-          value_template: "{{ trigger.event.data.new_state.attributes.battery_level is defined }}"
-        - condition: template
-          value_template: "{{ trigger.event.data.new_state.attributes.battery is defined }}"
-        - condition: template
-          value_template: "{{ trigger.event.data.new_state.attributes['Battery numeric'] is defined }}"
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery_level is defined }}"
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery_level is not none }}"
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery is defined }}"
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery is not none }}"
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes['Battery numeric'] is defined }}"
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes['Battery numeric'] is not none }}"
   action:
     - service: mqtt.publish
       data_template:
