@@ -161,6 +161,23 @@
 ## 1.2.1 (2019-01-23)
 ##   Changed
 ##   - Fixed Time platform to time_pattern platform
+##
+## 1.2.2 (2019-02-09)
+##   Added
+##   - Alert if battery state is unavailable
+##   Removed
+##   - Removed startup trigger from automation.update_battery_status_group_members
+##   Changed
+##   - Default to notify.notify if input_text.notifier_name doesn't contain "notify."
+##
+## 1.2.3 (2019-03-02)
+##   Changed
+##   - Handle null attributes gracefully
+##
+## 1.2.4 (2019-03-02)
+##   Added
+##   - Added support for battery_critical attributes by @Djebouh
+################################################################
 ################################################################
 
 ################################################################
@@ -433,6 +450,7 @@ automation:
             )
             or states(entity_id) | lower == 'low'
             or states(entity_id) | lower == 'unknown'
+            or states(entity_id) | lower == 'unavailable'
           )
         ) -%}
           {{ state_attr(entity_id, "friendly_name") }} ({{ states(entity_id) }})
@@ -463,6 +481,7 @@ automation:
               )
               or states(entity_id) | lower == 'low'
               or states(entity_id) | lower == 'unknown'
+              or states(entity_id) | lower == 'unavailable'
             )
           ) -%}
             {{ state_attr(entity_id, "friendly_name") }} ({{ states(entity_id) }})
@@ -499,6 +518,7 @@ automation:
             )
             or states(entity_id) | lower == 'low'
             or states(entity_id) | lower == 'unknown'
+            or states(entity_id) | lower == 'unavailable'
           )
         ) -%}
           {{ state_attr(entity_id, "friendly_name") }} ({{ states(entity_id) }})
@@ -529,7 +549,7 @@ automation:
     - condition: template
       value_template: "{{ states.input_select.notifier_format.state == 'Default' }}"
     - service_template: >
-        {% if states.input_text.notifier_name.state != "" %}
+        {% if "notify." in states.input_text.notifier_name.state %}
           {{ states.input_text.notifier_name.state }}
         {% else %}
           notify.notify
@@ -583,8 +603,6 @@ automation:
     - condition: template
       value_template: "{{ trigger.event.data.new_state is not none }}"
     - condition: template
-      value_template: "{{ trigger.event.data.new_state.attributes is not none }}"
-    - condition: template
       value_template: "{{ 'battery' not in trigger.event.data.new_state.name | lower }}"
     - condition: template
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'device_class', 'battery') }}"
@@ -592,12 +610,30 @@ automation:
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'battery_sensor_creation_disabled', true) }}"
     - condition: or
       conditions:
-        - condition: template
-          value_template: "{{ trigger.event.data.new_state.attributes.battery_level is defined }}"
-        - condition: template
-          value_template: "{{ trigger.event.data.new_state.attributes.battery is defined }}"
-        - condition: template
-          value_template: "{{ trigger.event.data.new_state.attributes['Battery numeric'] is defined }}"
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery_level is defined }}"
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery_level is not none }}"
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery is defined }}"
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery is not none }}"
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes['Battery numeric'] is defined }}"
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes['Battery numeric'] is not none }}"
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery_critical is defined }}"
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery_critical is not none }}"
   action:
     - service: mqtt.publish
       data_template:
@@ -614,6 +650,9 @@ automation:
             {%- elif trigger.event.data.new_state.attributes['Battery numeric'] is defined -%}
               {%- set attribval = (trigger.event.data.new_state.attributes['Battery numeric'] | int + 1) * 10 -%}
               {%- set attribname = 'Battery numeric' -%}
+            {% elif trigger.event.data.new_state.attributes.battery_critical is defined -%}
+              {%- set attribval = trigger.event.data.new_state.attributes.battery_critical -%}
+              {%- set attribname = 'battery_critical' -%}
             {%- endif -%}
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state",
@@ -623,6 +662,9 @@ automation:
             "device_class": "battery",
             {% elif trigger.event.data.new_state.attributes.battery_template_string is defined -%}
             "value_template": "{{ trigger.event.data.new_state.attributes.battery_template_string }}",
+            "icon": "mdi:battery",
+            {% elif trigger.event.data.new_state.attributes.battery_critical is defined -%}
+            "value_template": "{{ "{%" }} if value_json.value {{ "%}" }} low {{ "{%" }} else {{ "%}" }} full {{ "{%" }} endif {{ "%}" }}",
             "icon": "mdi:battery",
             {% else -%}
             "value_template": "{{ "{{" }} value_json.value | int {{ "}}" }}",
@@ -654,6 +696,8 @@ automation:
               {%- set attribval = trigger.event.data.new_state.attributes.battery -%}
             {%- elif trigger.event.data.new_state.attributes['Battery numeric'] is defined -%}
               {%- set attribval = (trigger.event.data.new_state.attributes['Battery numeric'] | int + 1) * 10 -%}
+            {%- elif trigger.event.data.new_state.attributes.battery_critical is defined -%}
+              {%- set attribval = trigger.event.data.new_state.attributes.battery_critical -%}
             {%- endif -%}
             "value": {% if attribval | int == attribval -%}
               {{ attribval }}
@@ -682,6 +726,9 @@ automation:
             {%- elif trigger.event.data.new_state.attributes['Battery numeric'] is defined -%}
               {%- set attribval = (trigger.event.data.new_state.attributes['Battery numeric'] | int + 1) * 10 -%}
               {%- set attribname = 'Battery numeric' -%}
+            {%- elif trigger.event.data.new_state.attributes.battery_critical is defined -%}
+              {%- set attribval = trigger.event.data.new_state.attributes.battery_critical -%}
+              {%- set attribname = 'battery_critical' -%}
             {%- endif -%}
             "entity_id": "{{ trigger.event.data.entity_id }}",
             {% if attribname is defined -%}
@@ -693,10 +740,8 @@ automation:
 - alias: update_battery_status_group_members
   initial_state: 'on'
   trigger:
-    - platform: homeassistant
-      event: start
     - platform: time_pattern
-      minutes: '/5'
+      minutes: '/1'
       seconds: 00
   action:
     - service: group.set
