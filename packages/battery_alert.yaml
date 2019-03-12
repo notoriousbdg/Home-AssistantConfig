@@ -664,7 +664,7 @@ automation:
             "value_template": "{{ trigger.event.data.new_state.attributes.battery_template_string }}",
             "icon": "mdi:battery",
             {% elif trigger.event.data.new_state.attributes.battery_critical is defined -%}
-            "value_template": "{{ "{%" }} if value_json.value {{ "%}" }} low {{ "{%" }} else {{ "%}" }} full {{ "{%" }} endif {{ "%}" }}",
+            "value_template": "{{ "{{" }} 'low' if value_json.value else 'full' {{ "}}" }}",
             "icon": "mdi:battery",
             {% else -%}
             "value_template": "{{ "{{" }} value_json.value | int {{ "}}" }}",
@@ -700,9 +700,9 @@ automation:
               {%- set attribval = trigger.event.data.new_state.attributes.battery_critical -%}
             {%- endif -%}
             "value": {% if attribval | int == attribval -%}
-              {{ attribval }}
+              {{ attribval | int }}
             {%- elif attribval | float == attribval -%}
-              {{ attribval }}
+              {{ attribval | float }}
             {%- elif attribval | length == attribval | float | string | length -%}
               {{ attribval | float }}
             {%- elif attribval | length == attribval | int | string | length -%}
