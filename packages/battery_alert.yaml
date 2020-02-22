@@ -292,13 +292,11 @@ homeassistant:
       <<: *customize
       friendly_name: "Battery Alert"
       icon: mdi:steam
-      control: hidden
 
     group.battery_status:
       <<: *customize
       friendly_name: "Battery Status"
       icon: mdi:battery-charging
-      control: hidden
 
     ################################################
     ## Automation
@@ -343,13 +341,11 @@ homeassistant:
 ################################################
 group:
   battery_view:
-    view: yes
     entities:
       - group.battery_status
       - group.battery_alert
 
   battery_alert:
-    control: hidden
     entities:
       - input_boolean.low_batteries
       - input_number.battery_alert_threshold_min
