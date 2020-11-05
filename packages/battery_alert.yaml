@@ -292,13 +292,11 @@ homeassistant:
       <<: *customize
       friendly_name: "Battery Alert"
       icon: mdi:steam
-      control: hidden
 
     group.battery_status:
       <<: *customize
       friendly_name: "Battery Status"
       icon: mdi:battery-charging
-      control: hidden
 
     ################################################
     ## Automation
@@ -343,13 +341,11 @@ homeassistant:
 ################################################
 group:
   battery_view:
-    view: yes
     entities:
       - group.battery_status
       - group.battery_alert
 
   battery_alert:
-    control: hidden
     entities:
       - input_boolean.low_batteries
       - input_number.battery_alert_threshold_min
@@ -436,7 +432,10 @@ automation:
       value_template: &low_battery_check >
         {% macro battery_level() %}
         {% for entity_id in states.group.battery_status.attributes.entity_id if (
-          not is_state_attr(entity_id, 'battery_alert_disabled', true)
+            not (
+                  is_state_attr(entity_id, 'battery_alert_disabled', true)
+                  or is_state_attr(entity_id, 'restored', true)
+                )
           and states(entity_id) is not none
           and (
             (
@@ -467,7 +466,10 @@ automation:
         message: &message >
           {% macro battery_level() %}
           {% for entity_id in states.group.battery_status.attributes.entity_id if (
-            not is_state_attr(entity_id, 'battery_alert_disabled', true)
+            not (
+                  is_state_attr(entity_id, 'battery_alert_disabled', true)
+                  or is_state_attr(entity_id, 'restored', true)
+                )
             and states(entity_id) is not none
             and (
               (
@@ -504,7 +506,10 @@ automation:
       value_template: &low_battery_clear >
         {% macro battery_level() %}
         {% for entity_id in states.group.battery_status.attributes.entity_id if (
-          not is_state_attr(entity_id, 'battery_alert_disabled', true)
+          not (
+                is_state_attr(entity_id, 'battery_alert_disabled', true)
+                or is_state_attr(entity_id, 'restored', true)
+              )
           and states(entity_id) is not none
           and (
             (
@@ -608,6 +613,8 @@ automation:
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'device_class', 'battery') }}"
     - condition: template
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'battery_sensor_creation_disabled', true) }}"
+    - condition: template
+      value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'restored', true) }}"
     - condition: or
       conditions:
         - condition: and
@@ -763,6 +770,8 @@ automation:
                   item.attributes.icon is not defined
                 ) and (
                   not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+                ) and (
+                  not is_state_attr(item.entity_id, 'restored', true)
                 )
               )
             )
