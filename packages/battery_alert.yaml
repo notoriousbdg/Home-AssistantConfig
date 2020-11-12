@@ -177,6 +177,22 @@
 ## 1.2.4 (2019-03-02)
 ##   Added
 ##   - Added support for battery_critical attributes by @Djebouh
+##
+## 1.3.0 (2020-11-05) by @KptnKMan
+##   Info
+##   - Running successfully with HA 0.117.2
+##   Breaking Changes
+##   - Should be none, as far as I can tell.
+##   Fixed
+##   - Removed depreciated and defunct Group settings
+##   Removed
+##   - Persistent Notification of "None (Unavailable)" entities
+##   - Battery Status of "None (Unavailable)" entities
+##   - Battery Status Group no longer adds restored Unavailable entities
+##   - MQTT publish no longer adds restored Unavailable entities
+##   Added
+##   - Added Lovelace install instructions :)
+##
 ################################################################
 ################################################################
 
@@ -268,6 +284,51 @@
 ##             {%- endif -%}
 ################################################################
 
+################################################################
+## Lovelace Instructions - version 0.117+
+################################################################
+## 
+## If you are using a recent version of Home Asssistant, and want to add the Battery Alert
+## to your Lovelace Dashboard, you should add the code snippet below to your Lovelace config.
+## 
+## You can add this via the UI, select 'Edit Dashboard' -> 'Raw Configuration Editor'.
+## You can also add it directly to your 'lovelace.yaml' file.
+## 
+## You should just be able to add this to the bottom, and be good to go :)
+## 
+##  - title: Battery Alert
+##    path: battery-alert
+##    icon: 'mdi:battery-alert'
+##    badges: []
+##    cards:
+##      - type: entities
+##        entities:
+##          - entity: input_boolean.low_batteries
+##          - entity: input_number.battery_alert_threshold_min
+##          - entity: input_number.battery_alert_threshold_max
+##          - entity: input_text.delete_battery_sensor
+##          - entity: input_text.notifier_name
+##          - entity: input_select.notifier_format
+##          - entity: automation.battery_persistent_notification
+##          - entity: automation.battery_persistent_notification_clear
+##          - entity: automation.battery_notification_default
+##          - entity: automation.battery_notification_slack
+##          - entity: automation.battery_sensor_from_attributes
+##          - entity: automation.update_battery_status_group_members
+##          - entity: automation.delete_battery_sensor
+##        title: Battery Alert Main
+##        show_header_toggle: false
+##      - type: entities
+##        entities:
+##          - entity: group.battery_status
+##          - entity: group.battery_alert
+##          - entity: group.battery_view
+##        title: Battery Alert View
+##        show_header_toggle: false
+##
+################################################################
+################################################################
+
 ################################################
 ## Customize
 ################################################
@@ -292,13 +353,11 @@ homeassistant:
       <<: *customize
       friendly_name: "Battery Alert"
       icon: mdi:steam
-      control: hidden
 
     group.battery_status:
       <<: *customize
       friendly_name: "Battery Status"
       icon: mdi:battery-charging
-      control: hidden
 
     ################################################
     ## Automation
@@ -343,13 +402,11 @@ homeassistant:
 ################################################
 group:
   battery_view:
-    view: yes
     entities:
       - group.battery_status
       - group.battery_alert
 
   battery_alert:
-    control: hidden
     entities:
       - input_boolean.low_batteries
       - input_number.battery_alert_threshold_min
@@ -436,7 +493,10 @@ automation:
       value_template: &low_battery_check >
         {% macro battery_level() %}
         {% for entity_id in states.group.battery_status.attributes.entity_id if (
-          not is_state_attr(entity_id, 'battery_alert_disabled', true)
+            not (
+                  is_state_attr(entity_id, 'battery_alert_disabled', true)
+                  or is_state_attr(entity_id, 'restored', true)
+                )
           and states(entity_id) is not none
           and (
             (
@@ -467,7 +527,10 @@ automation:
         message: &message >
           {% macro battery_level() %}
           {% for entity_id in states.group.battery_status.attributes.entity_id if (
-            not is_state_attr(entity_id, 'battery_alert_disabled', true)
+            not (
+                  is_state_attr(entity_id, 'battery_alert_disabled', true)
+                  or is_state_attr(entity_id, 'restored', true)
+                )
             and states(entity_id) is not none
             and (
               (
@@ -504,7 +567,10 @@ automation:
       value_template: &low_battery_clear >
         {% macro battery_level() %}
         {% for entity_id in states.group.battery_status.attributes.entity_id if (
-          not is_state_attr(entity_id, 'battery_alert_disabled', true)
+          not (
+                is_state_attr(entity_id, 'battery_alert_disabled', true)
+                or is_state_attr(entity_id, 'restored', true)
+              )
           and states(entity_id) is not none
           and (
             (
@@ -608,6 +674,8 @@ automation:
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'device_class', 'battery') }}"
     - condition: template
       value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'battery_sensor_creation_disabled', true) }}"
+    - condition: template
+      value_template: "{{ not is_state_attr(trigger.event.data.entity_id, 'restored', true) }}"
     - condition: or
       conditions:
         - condition: and
@@ -763,6 +831,8 @@ automation:
                   item.attributes.icon is not defined
                 ) and (
                   not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+                ) and (
+                  not is_state_attr(item.entity_id, 'restored', true)
                 )
               )
             )
