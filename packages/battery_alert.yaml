@@ -702,6 +702,12 @@ automation:
               value_template: "{{ trigger.event.data.new_state.attributes.battery_critical is defined }}"
             - condition: template
               value_template: "{{ trigger.event.data.new_state.attributes.battery_critical is not none }}"
+        - condition: and
+          conditions:
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery_low is defined }}"
+            - condition: template
+              value_template: "{{ trigger.event.data.new_state.attributes.battery_low is not none }}"
   action:
     - service: mqtt.publish
       data_template:
@@ -721,6 +727,9 @@ automation:
             {% elif trigger.event.data.new_state.attributes.battery_critical is defined -%}
               {%- set attribval = trigger.event.data.new_state.attributes.battery_critical -%}
               {%- set attribname = 'battery_critical' -%}
+            {% elif trigger.event.data.new_state.attributes.battery_low is defined -%}
+              {%- set attribval = trigger.event.data.new_state.attributes.battery_low -%}
+              {%- set attribname = 'battery_low' -%}
             {%- endif -%}
             "name": "{{ trigger.event.data.new_state.name }} Battery",
             "state_topic": "homeassistant/sensor/{{ trigger.event.data.entity_id.split('.')[1] }}_battery/state",
@@ -732,6 +741,9 @@ automation:
             "value_template": "{{ trigger.event.data.new_state.attributes.battery_template_string }}",
             "icon": "mdi:battery",
             {% elif trigger.event.data.new_state.attributes.battery_critical is defined -%}
+            "value_template": "{{ "{{" }} 'low' if value_json.value else 'full' {{ "}}" }}",
+            "icon": "mdi:battery",
+            {% elif trigger.event.data.new_state.attributes.battery_low is defined -%}
             "value_template": "{{ "{{" }} 'low' if value_json.value else 'full' {{ "}}" }}",
             "icon": "mdi:battery",
             {% else -%}
@@ -766,6 +778,8 @@ automation:
               {%- set attribval = (trigger.event.data.new_state.attributes['Battery numeric'] | int + 1) * 10 -%}
             {%- elif trigger.event.data.new_state.attributes.battery_critical is defined -%}
               {%- set attribval = trigger.event.data.new_state.attributes.battery_critical -%}
+            {%- elif trigger.event.data.new_state.attributes.battery_low is defined -%}
+              {%- set attribval = trigger.event.data.new_state.attributes.battery_low -%}
             {%- endif -%}
             "value": {% if attribval | int == attribval -%}
               {{ attribval | int }}
@@ -797,6 +811,9 @@ automation:
             {%- elif trigger.event.data.new_state.attributes.battery_critical is defined -%}
               {%- set attribval = trigger.event.data.new_state.attributes.battery_critical -%}
               {%- set attribname = 'battery_critical' -%}
+            {%- elif trigger.event.data.new_state.attributes.battery_low is defined -%}
+              {%- set attribval = trigger.event.data.new_state.attributes.battery_low -%}
+              {%- set attribname = 'battery_low' -%}
             {%- endif -%}
             "entity_id": "{{ trigger.event.data.entity_id }}",
             {% if attribname is defined -%}
