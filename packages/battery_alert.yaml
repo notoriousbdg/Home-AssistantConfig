@@ -193,6 +193,12 @@
 ##   Added
 ##   - Added Lovelace install instructions :)
 ##
+## 1.3.1 (2021-05-23)
+##   Fixed
+##   - Minor updates to Template, automation, service to comply syntax changes
+##   Changed
+##   - update_battery_status_group_members refactored for readability
+##
 ################################################################
 ################################################################
 
@@ -457,8 +463,8 @@ input_select:
   notifier_format:
     name: Notifier Format
     options:
-     - Default
-     - Slack
+      - Default
+      - Slack
     icon: mdi:comment-question-outline
 
 ################################################
@@ -479,7 +485,7 @@ input_text:
 ################################################
 automation:
 - alias: battery_persistent_notification
-  initial_state: 'on'
+  initial_state: true
   trigger:
     - platform: time_pattern
       minutes: '/15'
@@ -553,7 +559,7 @@ automation:
           {{ battery_level() }}
 
 - alias: battery_persistent_notification_clear
-  initial_state: 'on'
+  initial_state: true
   trigger:
     - platform: time_pattern
       minutes: '/15'
@@ -599,7 +605,7 @@ automation:
         notification_id: low_battery_alert
 
 - alias: battery_notification_default
-  initial_state: 'on'
+  initial_state: true
   trigger:
     - platform: time
       at: '10:00:00'
@@ -614,7 +620,7 @@ automation:
       value_template: *low_battery_check
     - condition: template
       value_template: "{{ states.input_select.notifier_format.state == 'Default' }}"
-    - service_template: >
+    - service: >
         {% if "notify." in states.input_text.notifier_name.state %}
           {{ states.input_text.notifier_name.state }}
         {% else %}
@@ -625,7 +631,7 @@ automation:
         message: *message
 
 - alias: battery_notification_slack
-  initial_state: 'on'
+  initial_state: true
   trigger:
     - platform: time
       at: '10:00:00'
@@ -640,7 +646,7 @@ automation:
       value_template: *low_battery_check
     - condition: template
       value_template: "{{ states.input_select.notifier_format.state == 'Slack' }}"
-    - service_template: >
+    - service: >
         {% if states.input_text.notifier_name.state != "" %}
           {{ states.input_text.notifier_name.state }}
         {% else %}
@@ -655,7 +661,7 @@ automation:
             text: *message
 
 - alias: battery_sensor_from_attributes
-  initial_state: 'on'
+  initial_state: true
   trigger:
     - platform: event
       event_type: state_changed
@@ -806,7 +812,7 @@ automation:
           }
 
 - alias: update_battery_status_group_members
-  initial_state: 'on'
+  initial_state: true
   trigger:
     - platform: time_pattern
       minutes: '/1'
@@ -819,29 +825,31 @@ automation:
           {%- for item in states.sensor if (
             not is_state_attr(item.entity_id, 'hidden', true)
             and (
+              not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
+            )
+            and (
+              not is_state_attr(item.entity_id, 'restored', true)
+            )
+            and (
               is_state_attr(item.entity_id, 'device_class', 'battery')
-              or 'battery' in item.attributes.icon | lower
+              or (item.attributes.icon is defined and 'battery' in item.attributes.icon | lower)
               or (item.entity_id | lower).endswith('_bat')
               or (item.name | lower).endswith('_bat')
-              ) or (
-                (
-                  'battery' in item.entity_id | lower
-                  or 'battery' in item.name | lower
-                ) and (
-                  item.attributes.icon is not defined
-                ) and (
-                  not is_state_attr(item.entity_id, 'battery_alert_disabled', true)
-                ) and (
-                  not is_state_attr(item.entity_id, 'restored', true)
-                )
-              )
+            ) or (
+              (
+                'battery' in item.entity_id | lower
+                or 'battery' in item.name | lower
+              ) and (
+                item.attributes.icon is not defined
+              ) 
             )
+          )
           -%}
             {{ item.entity_id }}{% if not loop.last %}, {% endif %}
           {%- endfor -%}
 
 - alias: delete_battery_sensor
-  initial_state: 'on'
+  initial_state: true
   trigger:
     - platform: state
       entity_id:
