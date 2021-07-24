@@ -193,6 +193,11 @@
 ##   Added
 ##   - Added Lovelace install instructions :)
 ##
+## 1.3.1 (2020-11-05) by @wst-tdb
+##   Fixed
+##   - Changed device detection in group creation to check all devices, 
+##     not just sensors, if they have battery information.
+##
 ################################################################
 ################################################################
 
@@ -816,13 +821,17 @@ automation:
       data_template:
         object_id: "battery_status"
         entities: >-
-          {%- for item in states.sensor if (
+          alertGroup = self.get_state("group.battery_alert", attribute = "all")
+          {%- for item in states if (
             not is_state_attr(item.entity_id, 'hidden', true)
+            and
+            not item.entity_id in state_attr("group.battery_alert", "entity_id")
             and (
               is_state_attr(item.entity_id, 'device_class', 'battery')
               or 'battery' in item.attributes.icon | lower
               or (item.entity_id | lower).endswith('_bat')
               or (item.name | lower).endswith('_bat')
+              or (item.attributes.battery_level or item.attributes.battery)
               ) or (
                 (
                   'battery' in item.entity_id | lower
