@@ -821,7 +821,6 @@ automation:
       data_template:
         object_id: "battery_status"
         entities: >-
-          alertGroup = self.get_state("group.battery_alert", attribute = "all")
           {%- for item in states if (
             not is_state_attr(item.entity_id, 'hidden', true)
             and
